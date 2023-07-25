@@ -1,9 +1,5 @@
 import pygame
 
-black = (0, 0, 0)
-red = (255, 0, 0)
-green = (0, 255, 0)
-
 LEVEL_MAPS = [
     "lvl1.txt",
 ]
@@ -11,7 +7,10 @@ LEVEL_MAPS = [
 
 class Game:
     def __init__(self) -> None:
-        self.size = (1024, 768)
+        ratio = 1.33
+        y_size = 768
+        x_size = y_size * ratio
+        self.size = (x_size, y_size)
         self._level = 0
         self.screen = None
 
@@ -21,7 +20,6 @@ class Game:
         """
         pygame.init()
         self.screen = pygame.display.set_mode(self.size)
-        self.screen.fill(black)
         pygame.display.update()
         pygame.display.set_caption("Hello World")
         while True:
@@ -53,10 +51,19 @@ class Game:
                     row_frac = row_ind / row_range
                     col_frac = col_ind / col_range
                     rect_x_cord = col_frac * self.size[0]
+                    rect_x_size = self.size[0] / col_range
                     rect_y_cord = row_frac * self.size[1]
-                    pygame.draw.rect(
-                        self.screen, red, pygame.Rect(rect_x_cord, rect_y_cord, 3, 3)
+                    rect_y_size = self.size[1] / row_range
+
+                    rect = pygame.Rect(
+                        rect_x_cord, rect_y_cord, int(rect_x_size), int(rect_y_size)
                     )
+
+                    icon_file = "./images/wall-24.png"
+                    icon = pygame.image.load(icon_file)
+                    icon_size = (rect_x_size + 10, rect_y_size)
+                    icon = pygame.transform.scale(icon, icon_size)
+                    self.screen.blit(icon, rect)
         pygame.display.update()
 
     def setup_current_level(self):
