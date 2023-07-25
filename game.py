@@ -8,7 +8,7 @@ LEVEL_MAPS = [
 class Game:
     def __init__(self) -> None:
         ratio = 1.33
-        y_size = 768
+        y_size = 1000
         x_size = y_size * ratio
         self.size = (x_size, y_size)
         self._level = 0
@@ -56,14 +56,18 @@ class Game:
                     rect_y_size = self.size[1] / row_range
 
                     rect = pygame.Rect(
-                        rect_x_cord, rect_y_cord, int(rect_x_size), int(rect_y_size)
+                        rect_x_cord,
+                        rect_y_cord,
+                        rect_x_size,
+                        rect_y_size,
                     )
 
-                    icon_file = "./images/wall-24.png"
+                    icon_file = "./images/wall.jpg"
                     icon = pygame.image.load(icon_file)
-                    icon_size = (rect_x_size + 10, rect_y_size)
+                    icon_size = (rect.width, rect.height)
                     icon = pygame.transform.scale(icon, icon_size)
                     self.screen.blit(icon, rect)
+
         pygame.display.update()
 
     def setup_current_level(self):
