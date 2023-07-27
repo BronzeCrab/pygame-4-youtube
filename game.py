@@ -125,8 +125,8 @@ class Game:
                 elif key == "M":
                     pass
                 else:
-                    r = random.randint(0, 5)
-                    if r == 5:
+                    r = random.randint(0, 10)
+                    if r == 0:
                         icon_file = "./images/box.png"
                         box = self.create_entity(
                             icon_file,
@@ -137,7 +137,7 @@ class Game:
                         )
                         self.boxes.append(box)
 
-    def setup_current_level(self):
+    def setup_current_level(self) -> None:
         """
         Set up the current level of the game.
         """
@@ -147,7 +147,7 @@ class Game:
         if self._level == 0:
             self.setup_first_lvl(data)
 
-    def update_player_pos(self):
+    def update_player_pos(self) -> None:
         keys_pressed = pygame.key.get_pressed()
         dx, dy = 0, 0
         if self.reg_event_key:
@@ -166,18 +166,34 @@ class Game:
         new_player_rect = pygame.Rect(
             new_player_x, new_player_y, self.player.rect.w, self.player.rect.h
         )
-        for entity in self.walls + self.boxes:
+        for entity in self.walls + self.boxes + [self.door]:
             if pygame.Rect.colliderect(new_player_rect, entity.rect):
+                if entity in self.boxes:
+                    # player will try to move this entity(box in this case)
+                    box_to_move = entity
+                    # next possible box coords
+                    new_box_to_move_x = box_to_move.rect.x + dx
+                    new_box_to_move_y = box_to_move.rect.y + dy
+                    # check if our box will collide after the move
+                    for next_b_d_or_w in self.walls + self.boxes + [self.door]:
+                        if (
+                            new_box_to_move_x == next_b_d_or_w.rect.x
+                            and new_box_to_move_y == next_b_d_or_w.rect.y
+                        ):
+                            break
+                    else:
+                        self.player.rect.x, self.player.rect.y = (
+                            new_player_x,
+                            new_player_y,
+                        )
+                        box_to_move.rect.x = new_box_to_move_x
+                        box_to_move.rect.y = new_box_to_move_y
                 break
         else:
             self.player.rect.x, self.player.rect.y = new_player_x, new_player_y
 
-    def update_lvl(self):
+    def update_lvl(self) -> None:
         self.screen.fill(BLACK)
-        for wall in self.walls:
-            self.screen.blit(wall.icon, wall.rect)
-        for box in self.boxes:
-            self.screen.blit(box.icon, box.rect)
-        self.screen.blit(self.player.icon, self.player.rect)
-        self.screen.blit(self.door.icon, self.door.rect)
+        for entity in self.walls + self.boxes + [self.player, self.door]:
+            self.screen.blit(entity.icon, entity.rect)
         pygame.display.update()
