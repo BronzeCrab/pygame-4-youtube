@@ -1,3 +1,5 @@
+import random
+
 import pygame
 
 from entity import Entity
@@ -23,6 +25,8 @@ class Game:
         self.reg_event_key = None
         self.rect_x_size = None
         self.rect_y_size = None
+        self.door = None
+        self.boxes = []
         self.setup_current_level()
 
     def on_init(self) -> None:
@@ -109,6 +113,30 @@ class Game:
                         self.rect_y_size,
                     )
 
+                elif key == "D":
+                    icon_file = "./images/door.png"
+                    self.door = self.create_entity(
+                        icon_file,
+                        rect_x_cord,
+                        rect_y_cord,
+                        self.rect_x_size,
+                        self.rect_y_size,
+                    )
+                elif key == "M":
+                    pass
+                else:
+                    r = random.randint(0, 5)
+                    if r == 5:
+                        icon_file = "./images/box.png"
+                        box = self.create_entity(
+                            icon_file,
+                            rect_x_cord,
+                            rect_y_cord,
+                            self.rect_x_size,
+                            self.rect_y_size,
+                        )
+                        self.boxes.append(box)
+
     def setup_current_level(self):
         """
         Set up the current level of the game.
@@ -138,8 +166,8 @@ class Game:
         new_player_rect = pygame.Rect(
             new_player_x, new_player_y, self.player.rect.w, self.player.rect.h
         )
-        for wall in self.walls:
-            if pygame.Rect.colliderect(new_player_rect, wall.rect):
+        for entity in self.walls + self.boxes:
+            if pygame.Rect.colliderect(new_player_rect, entity.rect):
                 break
         else:
             self.player.rect.x, self.player.rect.y = new_player_x, new_player_y
@@ -148,5 +176,8 @@ class Game:
         self.screen.fill(BLACK)
         for wall in self.walls:
             self.screen.blit(wall.icon, wall.rect)
+        for box in self.boxes:
+            self.screen.blit(box.icon, box.rect)
         self.screen.blit(self.player.icon, self.player.rect)
+        self.screen.blit(self.door.icon, self.door.rect)
         pygame.display.update()
