@@ -43,7 +43,7 @@ class Game:
                     exit()
                 elif event.type == pygame.KEYDOWN:
                     self.reg_event_key = event.key
-            self.update_player_pos()
+            self.update_player_and_box_pos()
             self.update_lvl()
 
     def load_map(self, filename: str) -> list[list[str]]:
@@ -147,7 +147,7 @@ class Game:
         if self._level == 0:
             self.setup_first_lvl(data)
 
-    def update_player_pos(self) -> None:
+    def update_player_and_box_pos(self) -> None:
         keys_pressed = pygame.key.get_pressed()
         dx, dy = 0, 0
         if self.reg_event_key:
@@ -169,28 +169,72 @@ class Game:
         for entity in self.walls + self.boxes + [self.door]:
             if pygame.Rect.colliderect(new_player_rect, entity.rect):
                 if entity in self.boxes:
-                    # player will try to move this entity(box in this case)
+                    # player will try to move this entity (box in this case)
                     box_to_move = entity
                     # next possible box coords
                     new_box_to_move_x = box_to_move.rect.x + dx
                     new_box_to_move_y = box_to_move.rect.y + dy
                     # check if our box will collide after the move
                     for next_b_d_or_w in self.walls + self.boxes + [self.door]:
+                        # if we are trying to move box into wall or dor,
+                        # then do nothing
                         if (
                             new_box_to_move_x == next_b_d_or_w.rect.x
                             and new_box_to_move_y == next_b_d_or_w.rect.y
+                            and next_b_d_or_w not in self.boxes
                         ):
                             break
+                    # we try to move box into other box
                     else:
-                        self.player.rect.x, self.player.rect.y = (
-                            new_player_x,
-                            new_player_y,
+                        pot_moved_boxes = self.get_potential_moved_boxes(
+                            box_to_move.rect.x, box_to_move.rect.y, dx, dy
                         )
-                        box_to_move.rect.x = new_box_to_move_x
-                        box_to_move.rect.y = new_box_to_move_y
+                        self.move_some_or_not(pot_moved_boxes, dx, dy)
                 break
         else:
             self.player.rect.x, self.player.rect.y = new_player_x, new_player_y
+
+    def is_box_near_the_wall(self, box: Entity, dx: int, dy: int) -> bool:
+        for wall in self.walls:
+            if wall.rect.x == box.rect.x + dx and wall.rect.y == box.rect.y + dy:
+                return True
+        return False
+
+    def get_potential_moved_boxes(
+        self,
+        a_box_x: int,
+        a_box_y: int,
+        dx: int,
+        dy: int,
+        potential_moved_boxes=None,
+    ) -> None:
+        if potential_moved_boxes is None:
+            potential_moved_boxes = []
+
+        for box in self.boxes:
+            if (
+                box.rect.x == a_box_x
+                and box.rect.y == a_box_y
+                and box not in potential_moved_boxes
+            ):
+                potential_moved_boxes.append(box)
+                self.get_potential_moved_boxes(
+                    box.rect.x + dx, box.rect.y + dy, dx, dy, potential_moved_boxes
+                )
+                break
+        return potential_moved_boxes
+
+    def move_some_or_not(self, pot_moved_boxes: list[Entity], dx: int, dy: int) -> None:
+        for box in pot_moved_boxes:
+            if self.is_box_near_the_wall(box, dx, dy):
+                return
+
+        for box in pot_moved_boxes:
+            box.rect.x += dx
+            box.rect.y += dy
+
+        self.player.rect.x += dx
+        self.player.rect.y += dy
 
     def update_lvl(self) -> None:
         self.screen.fill(BLACK)
