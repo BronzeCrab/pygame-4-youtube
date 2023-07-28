@@ -27,6 +27,8 @@ class Game:
         self.rect_y_size = None
         self.door = None
         self.boxes = []
+        self.monsters = []
+        self.box_pulling_mode = False
         self.setup_current_level()
 
     def on_init(self) -> None:
@@ -43,6 +45,9 @@ class Game:
                     exit()
                 elif event.type == pygame.KEYDOWN:
                     self.reg_event_key = event.key
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_LCTRL:
+                        self.box_pulling_mode = False
             self.update_player_and_box_pos()
             self.update_lvl()
 
@@ -123,7 +128,15 @@ class Game:
                         self.rect_y_size,
                     )
                 elif key == "M":
-                    pass
+                    icon_file = "./images/monster.png"
+                    monster = self.create_entity(
+                        icon_file,
+                        rect_x_cord,
+                        rect_y_cord,
+                        self.rect_x_size,
+                        self.rect_y_size,
+                    )
+                    self.monsters.append(monster)
                 else:
                     r = random.randint(0, 10)
                     if r == 0:
@@ -160,39 +173,74 @@ class Game:
                 dy -= self.rect_y_size
             if reg_k == pygame.K_DOWN or reg_k == pygame.K_s:
                 dy += self.rect_y_size
+            if reg_k == pygame.K_LCTRL:
+                self.box_pulling_mode = True
             self.reg_event_key = None
 
         new_player_x, new_player_y = self.player.rect.x + dx, self.player.rect.y + dy
         new_player_rect = pygame.Rect(
             new_player_x, new_player_y, self.player.rect.w, self.player.rect.h
         )
-        for entity in self.walls + self.boxes + [self.door]:
-            if pygame.Rect.colliderect(new_player_rect, entity.rect):
-                if entity in self.boxes:
-                    # player will try to move this entity (box in this case)
-                    box_to_move = entity
-                    # next possible box coords
-                    new_box_to_move_x = box_to_move.rect.x + dx
-                    new_box_to_move_y = box_to_move.rect.y + dy
-                    # check if our box will collide after the move
-                    for next_b_d_or_w in self.walls + self.boxes + [self.door]:
-                        # if we are trying to move box into wall or dor,
-                        # then do nothing
-                        if (
-                            new_box_to_move_x == next_b_d_or_w.rect.x
-                            and new_box_to_move_y == next_b_d_or_w.rect.y
-                            and next_b_d_or_w not in self.boxes
-                        ):
-                            break
-                    # we try to move box into other box
-                    else:
-                        pot_moved_boxes = self.get_potential_moved_boxes(
-                            box_to_move.rect.x, box_to_move.rect.y, dx, dy
+        if self.box_pulling_mode:
+            for entity in self.walls + self.boxes + [self.door]:
+                if pygame.Rect.colliderect(new_player_rect, entity.rect):
+                    break
+            else:
+                # check if there is a box next to current player pos
+                for box in self.boxes:
+                    if any(
+                        (
+                            (
+                                box.rect.x == self.player.rect.x + dx
+                                and box.rect.y == self.player.rect.y
+                            ),
+                            (
+                                box.rect.x == self.player.rect.x - dx
+                                and box.rect.y == self.player.rect.y
+                            ),
+                            (
+                                box.rect.x == self.player.rect.x
+                                and box.rect.y == self.player.rect.y + dy
+                            ),
+                            (
+                                box.rect.x == self.player.rect.x
+                                and box.rect.y == self.player.rect.y - dy
+                            ),
                         )
-                        self.move_some_or_not(pot_moved_boxes, dx, dy)
-                break
+                    ):
+                        box.rect.x += dx
+                        box.rect.y += dy
+                        break
+                self.player.rect.x += dx
+                self.player.rect.y += dy
         else:
-            self.player.rect.x, self.player.rect.y = new_player_x, new_player_y
+            for entity in self.walls + self.boxes + [self.door]:
+                if pygame.Rect.colliderect(new_player_rect, entity.rect):
+                    if entity in self.boxes:
+                        # player will try to move this entity (box in this case)
+                        box_to_move = entity
+                        # next possible box coords
+                        new_box_to_move_x = box_to_move.rect.x + dx
+                        new_box_to_move_y = box_to_move.rect.y + dy
+                        # check if our box will collide after the move
+                        for next_b_d_or_w in self.walls + self.boxes + [self.door]:
+                            # if we are trying to move box into wall or door,
+                            # then do nothing
+                            if (
+                                new_box_to_move_x == next_b_d_or_w.rect.x
+                                and new_box_to_move_y == next_b_d_or_w.rect.y
+                                and next_b_d_or_w not in self.boxes
+                            ):
+                                break
+                        # we try to move box into other box
+                        else:
+                            pot_moved_boxes = self.get_potential_moved_boxes(
+                                box_to_move.rect.x, box_to_move.rect.y, dx, dy
+                            )
+                            self.move_some_or_not(pot_moved_boxes, dx, dy)
+                    break
+            else:
+                self.player.rect.x, self.player.rect.y = new_player_x, new_player_y
 
     def is_box_near_the_wall(self, box: Entity, dx: int, dy: int) -> bool:
         for wall in self.walls:
@@ -238,6 +286,8 @@ class Game:
 
     def update_lvl(self) -> None:
         self.screen.fill(BLACK)
-        for entity in self.walls + self.boxes + [self.player, self.door]:
+        for entity in (
+            self.walls + self.boxes + [self.player, self.door] + self.monsters
+        ):
             self.screen.blit(entity.icon, entity.rect)
         pygame.display.update()
