@@ -29,6 +29,7 @@ class Game:
         self.boxes = []
         self.monsters = []
         self.box_pulling_mode = False
+        self.running = True
         self.setup_current_level()
 
     def on_init(self) -> None:
@@ -38,17 +39,18 @@ class Game:
         pygame.init()
         self.screen = pygame.display.set_mode(self.size)
         pygame.display.set_caption("Hello World")
-        while True:
+        while self.running:
+            pygame.time.wait(200)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     exit()
                 elif event.type == pygame.KEYDOWN:
                     self.reg_event_key = event.key
-                if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_LCTRL:
-                        self.box_pulling_mode = False
+                if event.type == pygame.KEYUP and event.key == pygame.K_LCTRL:
+                    self.box_pulling_mode = False
             self.update_player_and_box_pos()
+            self.move_monsters()
             self.update_lvl()
 
     def load_map(self, filename: str) -> list[list[str]]:
@@ -160,6 +162,14 @@ class Game:
         if self._level == 0:
             self.setup_first_lvl(data)
 
+    def check_if_box_killed_monster(self, box: Entity) -> None:
+        for monster in self.monsters:
+            if monster.rect.x == box.rect.x and monster.rect.y == box.rect.y:
+                self.monsters.remove(monster)
+
+    def check_for_win(self) -> bool:
+        return not self.monsters
+
     def update_player_and_box_pos(self) -> None:
         keys_pressed = pygame.key.get_pressed()
         dx, dy = 0, 0
@@ -181,6 +191,13 @@ class Game:
         new_player_rect = pygame.Rect(
             new_player_x, new_player_y, self.player.rect.w, self.player.rect.h
         )
+        if (
+            new_player_x == self.door.rect.x
+            and new_player_y == self.door.rect.y
+            and self.check_for_win()
+        ):
+            self.running = False
+
         if self.box_pulling_mode:
             for entity in self.walls + self.boxes + [self.door]:
                 if pygame.Rect.colliderect(new_player_rect, entity.rect):
@@ -210,6 +227,7 @@ class Game:
                     ):
                         box.rect.x += dx
                         box.rect.y += dy
+                        self.check_if_box_killed_monster(box)
                         break
                 self.player.rect.x += dx
                 self.player.rect.y += dy
@@ -280,9 +298,50 @@ class Game:
         for box in pot_moved_boxes:
             box.rect.x += dx
             box.rect.y += dy
+            self.check_if_box_killed_monster(box)
 
         self.player.rect.x += dx
         self.player.rect.y += dy
+
+    def move_monsters(self) -> None:
+        for monster in self.monsters:
+            random_i = random.randint(1, 8)
+            if random_i == 1:
+                dx = self.rect_x_size
+                dy = 0
+            elif random_i == 2:
+                dx = -self.rect_x_size
+                dy = 0
+            elif random_i == 3:
+                dx = 0
+                dy = self.rect_y_size
+            elif random_i == 4:
+                dx = 0
+                dy = -self.rect_y_size
+            elif random_i == 5:
+                dx = self.rect_x_size
+                dy = self.rect_y_size
+            elif random_i == 6:
+                dx = -self.rect_x_size
+                dy = self.rect_y_size
+            elif random_i == 7:
+                dx = self.rect_x_size
+                dy = -self.rect_y_size
+            elif random_i == 8:
+                dx = -self.rect_x_size
+                dy = -self.rect_y_size
+
+            new_possible_monster_x = monster.rect.x + dx
+            new_possible_monster_y = monster.rect.y + dy
+            for entity in self.walls + self.boxes + [self.door]:
+                if (
+                    entity.rect.x == new_possible_monster_x
+                    and entity.rect.y == new_possible_monster_y
+                ):
+                    break
+            else:
+                monster.rect.x = new_possible_monster_x
+                monster.rect.y = new_possible_monster_y
 
     def update_lvl(self) -> None:
         self.screen.fill(BLACK)
