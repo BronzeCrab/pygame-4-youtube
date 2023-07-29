@@ -196,7 +196,16 @@ class Game:
             and new_player_y == self.door.rect.y
             and self.check_for_win()
         ):
+            print("Game is over, you win")
             self.running = False
+
+        for monster in self.monsters:
+            if (
+                monster.rect.x == self.player.rect.x
+                and monster.rect.y == self.player.rect.y
+            ):
+                print("Game is over, you lose")
+                self.running = False
 
         if self.box_pulling_mode:
             for entity in self.walls + self.boxes + [self.door]:
