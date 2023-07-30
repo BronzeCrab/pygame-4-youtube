@@ -7,6 +7,7 @@ from entity import Entity
 
 LEVEL_MAPS = [
     "lvl1.txt",
+    "lvl2.txt",
 ]
 
 BLACK = (0, 0, 0)
@@ -82,7 +83,7 @@ class Game:
         icon = pygame.transform.scale(icon, icon_size)
         return Entity(rect, icon)
 
-    def setup_first_lvl(self, data: list[list[str]]) -> None:
+    def setup_lvl(self, data: list[list[str]]) -> None:
         """
         Drawing first level of the game.
         """
@@ -152,15 +153,16 @@ class Game:
                         )
                         self.boxes.append(box)
 
+    def setup_second_lvl(self, data: list[list[str]]) -> None:
+        pass
+
     def setup_current_level(self) -> None:
         """
         Set up the current level of the game.
         """
 
         data = self.load_map("./lvl_data/" + LEVEL_MAPS[self._level])
-
-        if self._level == 0:
-            self.setup_first_lvl(data)
+        self.setup_lvl(data)
 
     def check_if_box_killed_monster(self, box: Entity) -> None:
         for monster in self.monsters:
@@ -196,8 +198,13 @@ class Game:
             and new_player_y == self.door.rect.y
             and self.check_for_win()
         ):
-            print("Game is over, you win")
-            self.running = False
+            print("Lvl is over, you win, loading next lvl")
+            self._level += 1
+            self.walls = []
+            self.monsters = []
+            self.boxes = []
+            self.setup_current_level()
+            return
 
         for monster in self.monsters:
             if (
@@ -206,6 +213,7 @@ class Game:
             ):
                 print("Game is over, you lose")
                 self.running = False
+                return
 
         if self.box_pulling_mode:
             for entity in self.walls + self.boxes + [self.door]:
