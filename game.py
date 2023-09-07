@@ -173,7 +173,6 @@ class Game:
         return not self.monsters
 
     def update_player_and_box_pos(self) -> None:
-        keys_pressed = pygame.key.get_pressed()
         dx, dy = 0, 0
         if self.reg_event_key:
             reg_k = self.reg_event_key
