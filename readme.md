@@ -4,7 +4,7 @@
 
  # how to run it:
 
-```console
+```bash
 pip install -r requirements.txt
 
 python main.py
