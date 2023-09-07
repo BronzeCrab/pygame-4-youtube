@@ -14,6 +14,8 @@ python main.py
 
 ### First lvl:
 
+You can control your character using WASD.
+
 You must kill all mobs (by pushing or pulling boxes) in order to win at first lvl. You can push any amount of boxes in front of you. Also, you can pull only one box if you hold left ctrl btn.
 
 ### Second lvl:
