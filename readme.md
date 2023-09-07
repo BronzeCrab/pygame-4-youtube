@@ -14,9 +14,7 @@ python main.py
 
 ### First lvl:
 
-You must kill all mobs (by pushing or pulling boxes) in order to win at first lvl. You can push any amount of boxes
-
-if front of you. Also, you can pull only one box if you hold left ctrl btn.
+You must kill all mobs (by pushing or pulling boxes) in order to win at first lvl. You can push any amount of boxes if front of you. Also, you can pull only one box if you hold left ctrl btn.
 
 ### First lvl:
 
