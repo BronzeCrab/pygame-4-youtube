@@ -31,6 +31,7 @@ class Game:
         self.monsters = []
         self.box_pulling_mode = False
         self.running = True
+        self.sword = None
         self.setup_current_level()
 
     def on_init(self) -> None:
@@ -140,6 +141,15 @@ class Game:
                         self.rect_y_size,
                     )
                     self.monsters.append(monster)
+                elif key == "S":
+                    icon_file = "./images/sword.png"
+                    self.sword = self.create_entity(
+                        icon_file,
+                        rect_x_cord,
+                        rect_y_cord,
+                        self.rect_x_size,
+                        self.rect_y_size,
+                    )
                 else:
                     r = random.randint(0, 10)
                     if r == 0:
@@ -362,7 +372,11 @@ class Game:
     def update_lvl(self) -> None:
         self.screen.fill(BLACK)
         for entity in (
-            self.walls + self.boxes + [self.player, self.door] + self.monsters
+            self.walls
+            + self.boxes
+            + [self.player, self.door, self.sword]
+            + self.monsters
         ):
-            self.screen.blit(entity.icon, entity.rect)
+            if entity:
+                self.screen.blit(entity.icon, entity.rect)
         pygame.display.update()
