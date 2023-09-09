@@ -1,8 +1,8 @@
- # what is it?
+## what is it?
 
- this is small 2d pygame game
+this is small 2d pygame game
 
- # how to run it:
+## how to run it:
 
 ```bash
 pip install -r requirements.txt
