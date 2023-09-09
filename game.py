@@ -215,6 +215,8 @@ class Game:
             self.setup_current_level()
             return
 
+        self.check_if_player_picked_up_sword(new_player_x, new_player_y)
+
         for monster in self.monsters:
             if (
                 monster.rect.x == self.player.rect.x
@@ -285,6 +287,11 @@ class Game:
                     break
             else:
                 self.player.rect.x, self.player.rect.y = new_player_x, new_player_y
+
+    def check_if_player_picked_up_sword(self, new_player_x: int, new_player_y: int):
+        if self.sword:
+            if new_player_x == self.sword.rect.x and new_player_y == self.sword.rect.y:
+                self.sword = None
 
     def is_box_near_the_wall(self, box: Entity, dx: int, dy: int) -> bool:
         for wall in self.walls:
