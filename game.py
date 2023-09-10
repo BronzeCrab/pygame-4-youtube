@@ -2,7 +2,7 @@ import random
 
 import pygame
 
-from entity import Entity
+from entity import Entity, Sword
 
 
 LEVEL_MAPS = [
@@ -40,7 +40,7 @@ class Game:
         """
         pygame.init()
         self.screen = pygame.display.set_mode(self.size)
-        pygame.display.set_caption("Hello World")
+        pygame.display.set_caption("Very cool game tbh")
         while self.running:
             pygame.time.wait(200)
             for event in pygame.event.get():
@@ -71,7 +71,8 @@ class Game:
         rect_y_cord: float,
         rect_x_size: float,
         rect_y_size: float,
-    ) -> Entity:
+        create_sword: bool = False,
+    ) -> Entity | Sword:
         rect = pygame.Rect(
             rect_x_cord,
             rect_y_cord,
@@ -82,7 +83,10 @@ class Game:
         icon = pygame.image.load(icon_file)
         icon_size = (rect.width, rect.height)
         icon = pygame.transform.scale(icon, icon_size)
-        return Entity(rect, icon)
+        if create_sword:
+            return Sword(rect, icon)
+        else:
+            return Entity(rect, icon)
 
     def setup_lvl(self, data: list[list[str]]) -> None:
         """
@@ -149,6 +153,7 @@ class Game:
                         rect_y_cord,
                         self.rect_x_size,
                         self.rect_y_size,
+                        create_sword=True,
                     )
                 else:
                     r = random.randint(0, 10)
@@ -162,9 +167,6 @@ class Game:
                             self.rect_y_size,
                         )
                         self.boxes.append(box)
-
-    def setup_second_lvl(self, data: list[list[str]]) -> None:
-        pass
 
     def setup_current_level(self) -> None:
         """
@@ -196,6 +198,10 @@ class Game:
                 dy += self.rect_y_size
             if reg_k == pygame.K_LCTRL:
                 self.box_pulling_mode = True
+            if reg_k == pygame.K_SPACE and self.sword and self.sword.is_in_hand:
+                self.sword.rect.x = self.player.rect.x + self.rect_x_size
+                self.sword.rect.y = self.player.rect.y
+                self.sword.is_displayed = True
             self.reg_event_key = None
 
         new_player_x, new_player_y = self.player.rect.x + dx, self.player.rect.y + dy
@@ -291,7 +297,8 @@ class Game:
     def check_if_player_picked_up_sword(self, new_player_x: int, new_player_y: int):
         if self.sword:
             if new_player_x == self.sword.rect.x and new_player_y == self.sword.rect.y:
-                self.sword = None
+                self.sword.is_displayed = False
+                self.sword.is_in_hand = True
 
     def is_box_near_the_wall(self, box: Entity, dx: int, dy: int) -> bool:
         for wall in self.walls:
@@ -384,6 +391,6 @@ class Game:
             + [self.player, self.door, self.sword]
             + self.monsters
         ):
-            if entity:
+            if entity and entity.is_displayed:
                 self.screen.blit(entity.icon, entity.rect)
         pygame.display.update()

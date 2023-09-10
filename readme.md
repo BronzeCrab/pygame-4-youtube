@@ -1,6 +1,7 @@
 ## what is it?
 
-this is small 2d pygame game
+This is small 2d pygame game. This is indeed very cool
+game tbh, just try it, and you will not regret.
 
 ## how to run it:
 
