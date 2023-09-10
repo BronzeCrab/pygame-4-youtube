@@ -21,4 +21,4 @@ You must kill all mobs (by pushing or pulling boxes) in order to win at first lv
 
 ### Second lvl:
 
-You must also kill all monsters. You can use boxes, as in the first lvl, but also you can pick up the sword, and use it pressing space btn.
+You must also kill all monsters. You can use boxes, as in the first lvl, but also you can pick up the sword, and use it by pressing space btn.
