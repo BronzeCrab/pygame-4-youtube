@@ -2,7 +2,7 @@ import random
 
 import pygame
 
-from entity import Entity, Sword
+from entity import Entity, Sword, Player
 
 
 LEVEL_MAPS = [
@@ -51,8 +51,14 @@ class Game:
                     self.reg_event_key = event.key
                 if event.type == pygame.KEYUP and event.key == pygame.K_LCTRL:
                     self.box_pulling_mode = False
+                elif event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
+                    if self.sword and self.sword.is_in_hand:
+                        self.sword.is_displayed = False
+
             self.update_player_and_box_pos()
+            self.check_if_sword_killed_monster()
             self.move_monsters()
+            self.check_if_sword_killed_monster()
             self.update_lvl()
 
     def load_map(self, filename: str) -> list[list[str]]:
@@ -71,7 +77,7 @@ class Game:
         rect_y_cord: float,
         rect_x_size: float,
         rect_y_size: float,
-        create_sword: bool = False,
+        aclass: type = None,
     ) -> Entity | Sword:
         rect = pygame.Rect(
             rect_x_cord,
@@ -83,8 +89,8 @@ class Game:
         icon = pygame.image.load(icon_file)
         icon_size = (rect.width, rect.height)
         icon = pygame.transform.scale(icon, icon_size)
-        if create_sword:
-            return Sword(rect, icon)
+        if aclass:
+            return aclass(rect, icon)
         else:
             return Entity(rect, icon)
 
@@ -124,6 +130,7 @@ class Game:
                         rect_y_cord,
                         self.rect_x_size,
                         self.rect_y_size,
+                        aclass=Player,
                     )
 
                 elif key == "D":
@@ -153,7 +160,7 @@ class Game:
                         rect_y_cord,
                         self.rect_x_size,
                         self.rect_y_size,
-                        create_sword=True,
+                        aclass=Sword,
                     )
                 else:
                     r = random.randint(0, 10)
@@ -181,6 +188,15 @@ class Game:
             if monster.rect.x == box.rect.x and monster.rect.y == box.rect.y:
                 self.monsters.remove(monster)
 
+    def check_if_sword_killed_monster(self) -> None:
+        if self.sword and self.sword.is_in_hand and self.sword.is_displayed:
+            for monster in self.monsters:
+                if (
+                    monster.rect.x == self.sword.rect.x
+                    and monster.rect.y == self.sword.rect.y
+                ):
+                    self.monsters.remove(monster)
+
     def check_for_win(self) -> bool:
         return not self.monsters
 
@@ -199,9 +215,17 @@ class Game:
             if reg_k == pygame.K_LCTRL:
                 self.box_pulling_mode = True
             if reg_k == pygame.K_SPACE and self.sword and self.sword.is_in_hand:
-                self.sword.rect.x = self.player.rect.x + self.rect_x_size
-                self.sword.rect.y = self.player.rect.y
-                self.sword.is_displayed = True
+                # todo factor out in separate func
+                self.sword.rect.x = self.player.rect.x + self.player.dx
+                self.sword.rect.y = self.player.rect.y + self.player.dy
+                for entity in [self.door] + self.walls + self.boxes:
+                    if (
+                        self.sword.rect.x == entity.rect.x
+                        and self.sword.rect.y == entity.rect.y
+                    ):
+                        break
+                else:
+                    self.sword.is_displayed = True
             self.reg_event_key = None
 
         new_player_x, new_player_y = self.player.rect.x + dx, self.player.rect.y + dy
@@ -213,6 +237,11 @@ class Game:
             and new_player_y == self.door.rect.y
             and self.check_for_win()
         ):
+            if self._level == 1:
+                print("Game if over, you won!")
+                self.running = False
+                return
+
             print("Lvl is over, you win, loading next lvl")
             self._level += 1
             self.walls = []
@@ -220,8 +249,6 @@ class Game:
             self.boxes = []
             self.setup_current_level()
             return
-
-        self.check_if_player_picked_up_sword(new_player_x, new_player_y)
 
         for monster in self.monsters:
             if (
@@ -263,8 +290,7 @@ class Game:
                         box.rect.y += dy
                         self.check_if_box_killed_monster(box)
                         break
-                self.player.rect.x += dx
-                self.player.rect.y += dy
+                self.player.rect.x, self.player.rect.y = new_player_x, new_player_y
         else:
             for entity in self.walls + self.boxes + [self.door]:
                 if pygame.Rect.colliderect(new_player_rect, entity.rect):
@@ -294,8 +320,15 @@ class Game:
             else:
                 self.player.rect.x, self.player.rect.y = new_player_x, new_player_y
 
+        # save dx, dy to the player, to use it on next step to
+        # determine direction of the sword
+        if dx or dy:
+            self.player.dx = dx
+            self.player.dy = dy
+        self.check_if_player_picked_up_sword(new_player_x, new_player_y)
+
     def check_if_player_picked_up_sword(self, new_player_x: int, new_player_y: int):
-        if self.sword:
+        if self.sword and not self.sword.is_in_hand:
             if new_player_x == self.sword.rect.x and new_player_y == self.sword.rect.y:
                 self.sword.is_displayed = False
                 self.sword.is_in_hand = True
