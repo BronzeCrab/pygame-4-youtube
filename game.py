@@ -78,7 +78,7 @@ class Game:
         rect_x_size: float,
         rect_y_size: float,
         aclass: type = None,
-    ) -> Entity | Sword:
+    ) -> Entity | Sword | Player:
         rect = pygame.Rect(
             rect_x_cord,
             rect_y_cord,
