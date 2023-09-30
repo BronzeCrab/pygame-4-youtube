@@ -16,3 +16,7 @@ class Player(Entity):
 
 class Sword(Entity):
     is_in_hand: bool = False
+
+
+class Box(Entity):
+    pass

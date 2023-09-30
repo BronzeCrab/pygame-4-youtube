@@ -2,7 +2,7 @@ import random
 
 import pygame
 
-from entity import Entity, Sword, Player
+from entity import Entity, Sword, Player, Box
 
 
 LEVEL_MAPS = [
@@ -19,20 +19,24 @@ class Game:
         y_size = 1000
         x_size = y_size * screen_ratio
         self.size = (int(x_size), int(y_size))
-        self._level = 0
-        self.player = None
         self.screen = None
-        self.walls = []
-        self.reg_event_key = None
+        self._level = 0
         self.rect_x_size = None
         self.rect_y_size = None
+        self.reg_event_key = None
+        self.running = True
+        self.box_pulling_mode = False
+
+        self.init_entities()
+        self.setup_current_level()
+
+    def init_entities(self) -> None:
+        self.player = None
+        self.walls = []
         self.door = None
         self.boxes = []
         self.monsters = []
-        self.box_pulling_mode = False
-        self.running = True
         self.sword = None
-        self.setup_current_level()
 
     def on_init(self) -> None:
         """
@@ -172,6 +176,7 @@ class Game:
                             rect_y_cord,
                             self.rect_x_size,
                             self.rect_y_size,
+                            aclass=Box,
                         )
                         self.boxes.append(box)
 
@@ -199,6 +204,15 @@ class Game:
 
     def check_for_win(self) -> bool:
         return not self.monsters
+
+    def check_game_over(self) -> None:
+        for monster in self.monsters:
+            if (
+                monster.rect.x == self.player.rect.x
+                and monster.rect.y == self.player.rect.y
+            ):
+                print("Game is over, you lose, restart")
+                self.running = False
 
     def update_player_and_box_pos(self) -> None:
         dx, dy = 0, 0
@@ -250,14 +264,7 @@ class Game:
             self.setup_current_level()
             return
 
-        for monster in self.monsters:
-            if (
-                monster.rect.x == self.player.rect.x
-                and monster.rect.y == self.player.rect.y
-            ):
-                print("Game is over, you lose")
-                self.running = False
-                return
+        self.check_game_over()
 
         if self.box_pulling_mode:
             for entity in self.walls + self.boxes + [self.door]:
@@ -294,20 +301,19 @@ class Game:
         else:
             for entity in self.walls + self.boxes + [self.door]:
                 if pygame.Rect.colliderect(new_player_rect, entity.rect):
-                    if entity in self.boxes:
+                    if type(entity) is Box:
                         # player will try to move this entity (box in this case)
                         box_to_move = entity
                         # next possible box coords
                         new_box_to_move_x = box_to_move.rect.x + dx
                         new_box_to_move_y = box_to_move.rect.y + dy
-                        # check if our box will collide after the move
-                        for next_b_d_or_w in self.walls + self.boxes + [self.door]:
+                        # check if our box will collide with door or wall after the move
+                        for next_d_or_w in self.walls + [self.door]:
                             # if we are trying to move box into wall or door,
                             # then do nothing
                             if (
-                                new_box_to_move_x == next_b_d_or_w.rect.x
-                                and new_box_to_move_y == next_b_d_or_w.rect.y
-                                and next_b_d_or_w not in self.boxes
+                                new_box_to_move_x == next_d_or_w.rect.x
+                                and new_box_to_move_y == next_d_or_w.rect.y
                             ):
                                 break
                         # we try to move box into other box
