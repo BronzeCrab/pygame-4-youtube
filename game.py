@@ -205,14 +205,17 @@ class Game:
     def check_for_win(self) -> bool:
         return not self.monsters
 
-    def check_game_over(self) -> None:
+    def check_if_game_over(self) -> bool:
         for monster in self.monsters:
             if (
                 monster.rect.x == self.player.rect.x
                 and monster.rect.y == self.player.rect.y
             ):
                 print("Game is over, you lose, restart")
-                self.running = False
+                self.init_entities()
+                self.setup_current_level()
+                return True
+        return False
 
     def update_player_and_box_pos(self) -> None:
         dx, dy = 0, 0
@@ -258,13 +261,12 @@ class Game:
 
             print("Lvl is over, you win, loading next lvl")
             self._level += 1
-            self.walls = []
-            self.monsters = []
-            self.boxes = []
+            self.init_entities()
             self.setup_current_level()
             return
 
-        self.check_game_over()
+        if self.check_if_game_over():
+            return
 
         if self.box_pulling_mode:
             for entity in self.walls + self.boxes + [self.door]:
