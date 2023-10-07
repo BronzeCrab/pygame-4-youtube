@@ -212,23 +212,27 @@ class Game:
     def check_for_win(self) -> bool:
         return not self.monsters
 
+    def display_msg(self, msg: str) -> None:
+        self.screen.fill(BLACK)
+        font = pygame.font.SysFont("Helvetica", 56)
+        gameover = font.render(
+            msg,
+            False,
+            (255, 255, 255),
+        )
+        rect = gameover.get_rect()
+        rect.center = self.screen.get_rect().center
+        self.screen.blit(gameover, rect)
+        pygame.display.update()
+
     def check_if_game_over(self) -> bool:
         for monster in self.monsters:
             if (
                 monster.rect.x == self.player.rect.x
                 and monster.rect.y == self.player.rect.y
             ):
-                print("Game is over, you lose, you can restart")
                 self.player.is_alive = False
-
-                self.screen.fill(BLACK)
-                font = pygame.font.SysFont("Helvetica", 56)
-                gameover = font.render("Press R to Respawn", False, (255, 255, 255))
-                rect = gameover.get_rect()
-                rect.center = self.screen.get_rect().center
-                self.screen.blit(gameover, rect)
-                pygame.display.update()
-
+                self.display_msg("Game is over, press R to restart current level")
                 return True
         return False
 
@@ -270,8 +274,9 @@ class Game:
             and self.check_for_win()
         ):
             if self._level == 1:
-                print("Game is over, you won!")
-                self.running = False
+                self.player.is_alive = False
+                self._level = 0
+                self.display_msg("Game is over, you won! Press R to restart the game")
                 return
 
             print("Lvl is over, you win, loading next lvl")
