@@ -12,6 +12,7 @@ class Entity:
 class Player(Entity):
     dx: int = 0
     dy: int = 0
+    is_alive = True
 
 
 class Sword(Entity):

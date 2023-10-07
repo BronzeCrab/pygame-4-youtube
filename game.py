@@ -58,12 +58,19 @@ class Game:
                 elif event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
                     if self.sword and self.sword.is_in_hand:
                         self.sword.is_displayed = False
+                elif event.type == pygame.KEYUP and event.key == pygame.K_r:
+                    if not self.player.is_alive:
+                        self.init_entities()
+                        self.setup_current_level()
+                        self.player.is_alive = True
 
             self.update_player_and_box_pos()
-            self.check_if_sword_killed_monster()
-            self.move_monsters()
-            self.check_if_sword_killed_monster()
-            self.update_lvl()
+
+            if self.player.is_alive:
+                self.check_if_sword_killed_monster()
+                self.move_monsters()
+                self.check_if_sword_killed_monster()
+                self.update_lvl()
 
     def load_map(self, filename: str) -> list[list[str]]:
         """
@@ -211,9 +218,17 @@ class Game:
                 monster.rect.x == self.player.rect.x
                 and monster.rect.y == self.player.rect.y
             ):
-                print("Game is over, you lose, restart")
-                self.init_entities()
-                self.setup_current_level()
+                print("Game is over, you lose, you can restart")
+                self.player.is_alive = False
+
+                self.screen.fill(BLACK)
+                font = pygame.font.SysFont("Helvetica", 56)
+                gameover = font.render("Press R to Respawn", False, (255, 255, 255))
+                rect = gameover.get_rect()
+                rect.center = self.screen.get_rect().center
+                self.screen.blit(gameover, rect)
+                pygame.display.update()
+
                 return True
         return False
 
@@ -255,7 +270,7 @@ class Game:
             and self.check_for_win()
         ):
             if self._level == 1:
-                print("Game if over, you won!")
+                print("Game is over, you won!")
                 self.running = False
                 return
 
