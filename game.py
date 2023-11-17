@@ -89,7 +89,7 @@ class Game:
         rect_x_size: float,
         rect_y_size: float,
         aclass: type = None,
-    ) -> Entity | Sword | Player:
+    ) -> Entity | Sword | Player | Box:
         rect = pygame.Rect(
             rect_x_cord,
             rect_y_cord,
@@ -374,7 +374,7 @@ class Game:
         dx: int,
         dy: int,
         potential_moved_boxes=None,
-    ) -> None:
+    ) -> list[Box]:
         if potential_moved_boxes is None:
             potential_moved_boxes = []
 
